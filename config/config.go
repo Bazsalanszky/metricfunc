@@ -4,6 +4,12 @@
 
 package config
 
+import (
+	"net"
+	"strconv"
+	"strings"
+)
+
 type Config struct {
 	Info          *Info          `yaml:"info"`
 	Logger        *Logger        `yaml:"logger"`
@@ -39,9 +45,31 @@ type ServerAddr struct {
 	PollInterval int    `yaml:"pollInterval,omitempty"`
 }
 
+// HostPort returns Addr and Port joined as "host:port", with an IPv6 address
+// in brackets.
+func (s ServerAddr) HostPort() string {
+	return joinHostPort(s.Addr, s.Port)
+}
+
 type Urls struct {
 	Uri  string `yaml:"uri,omitempty"`
 	Port int    `yaml:"port,omitempty"`
+}
+
+// HostPort returns Uri and Port joined as "host:port", with an IPv6 address
+// in brackets.
+func (u Urls) HostPort() string {
+	return joinHostPort(u.Uri, u.Port)
+}
+
+// joinHostPort joins a host name, IPv4 address or IPv6 address with a port.
+// An IPv6 address that is already in brackets, which used to be the only way
+// to configure one, is accepted as well and not bracketed twice.
+func joinHostPort(host string, port int) string {
+	if len(host) > 1 && strings.HasPrefix(host, "[") && strings.HasSuffix(host, "]") {
+		host = host[1 : len(host)-1]
+	}
+	return net.JoinHostPort(host, strconv.Itoa(port))
 }
 
 type NFStream struct {

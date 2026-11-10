@@ -7,7 +7,6 @@ package reader
 import (
 	"context"
 	"encoding/json"
-	"fmt"
 	"time"
 
 	"github.com/omec-project/metricfunc/config"
@@ -34,7 +33,7 @@ func StartKafkaReader(cfg *config.Configuration) {
 func makeUrlsFromUriPort(uriPortCfg []config.Urls) []string {
 	var urls []string
 	for _, uriPort := range uriPortCfg {
-		urls = append(urls, fmt.Sprintf("%s:%d", uriPort.Uri, uriPort.Port))
+		urls = append(urls, uriPort.HostPort())
 	}
 
 	return urls

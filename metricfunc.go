@@ -13,7 +13,6 @@ import (
 	_ "net/http/pprof"
 	"os"
 	"os/signal"
-	"strconv"
 	"sync"
 	"syscall"
 
@@ -30,8 +29,22 @@ import (
 var PodIp string
 
 func init() {
-	podIpStr := os.Getenv("POD_IP")
-	PodIp = net.ParseIP(podIpStr).To4().String()
+	PodIp = podIP(os.Getenv("POD_IP"))
+}
+
+// podIP returns the pod's IPv4 or IPv6 address in canonical form, or "" if
+// podIpStr is not an IP address.
+func podIP(podIpStr string) string {
+	ip := net.ParseIP(podIpStr)
+	if ip == nil {
+		return ""
+	}
+	return ip.String()
+}
+
+// userAppServiceUrl returns the URL the controller polls for rogue IPs.
+func userAppServiceUrl(userApp config.ServerAddr) string {
+	return "http://" + userApp.HostPort() + userApp.Path
 }
 
 func main() {
@@ -94,9 +107,8 @@ func main() {
 		}
 
 		userAppClient := controller.UserAppService{
-			UserAppServiceUrl: "http://" + cfg.Configuration.UserAppApiServer.Addr + ":" +
-				strconv.Itoa(cfg.Configuration.UserAppApiServer.Port) + cfg.Configuration.UserAppApiServer.Path,
-			PollInterval: cfg.Configuration.UserAppApiServer.PollInterval,
+			UserAppServiceUrl: userAppServiceUrl(cfg.Configuration.UserAppApiServer),
+			PollInterval:      cfg.Configuration.UserAppApiServer.PollInterval,
 		}
 
 		controller.RogueChannel = rogueIpChan
