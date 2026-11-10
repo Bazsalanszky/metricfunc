@@ -12,7 +12,6 @@ import (
 	"io"
 	"net"
 	"net/http"
-	"strconv"
 	"strings"
 	"time"
 
@@ -368,11 +367,14 @@ func (rocClient *RocService) DisableSimcard(targets []Targets, imsi string) {
 	logger.ControllerLog.Warnf("imsi details not found in Targets and SiteInfo: [%v]", imsi)
 }
 
+// rocServiceUrl returns the base URL of the ROC API.
+func rocServiceUrl(roc config.ServerAddr) string {
+	return "http://" + roc.HostPort()
+}
+
 func RogueIPHandler(rogueIPChannel chan RogueIPs) {
-	addr := ControllerConfig.Configuration.RocEndPoint.Addr
-	port := ControllerConfig.Configuration.RocEndPoint.Port
 	rocClient := RocService{
-		RocServiceUrl: "http://" + addr + ":" + strconv.Itoa(port),
+		RocServiceUrl: rocServiceUrl(ControllerConfig.Configuration.RocEndPoint),
 	}
 
 	for rogueIPs := range rogueIPChannel {
